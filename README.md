@@ -4,6 +4,9 @@ A sci-fi holographic laser keyboard desktop app for Windows. The app overlays a
 transparent, always-on-top window, tracks your hands from a webcam (via a Python
 MediaPipe sidecar), and injects system-wide key presses as you dwell over keys.
 
+> **Status: work in progress.** This is a personal portfolio project under active
+> development and is not production-ready. Expect rough edges and changing behavior.
+
 ## Project structure
 
 - `CMakeLists.txt`: build configuration
@@ -21,7 +24,7 @@ cmake --build build
 ```
 
 The tracker needs Python with `mediapipe` and `opencv-python` installed
-(`pip install --user mediapipe opencv-python`); the app spawns it automatically.
+(`pip install --user mediapipe opencv-python`). The app spawns it automatically.
 
 ## Run
 
