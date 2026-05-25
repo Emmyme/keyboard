@@ -15,7 +15,6 @@ public:
   explicit KeyInjector(SendFn sender); // for tests / custom backends
 
   void setArmed(bool armed) { armed_ = armed; }
-  void toggle() { armed_ = !armed_; }
   bool armed() const { return armed_; }
 
   // Emits a key down+up for the Win32 virtual-key code, optionally wrapped in

@@ -60,3 +60,17 @@ void Renderer::renderFrame(const KeyboardLayout &layout, const std::vector<int> 
   keyRenderer.drawDots(fdots, 0.2f, 1.0f, 1.0f, 0.02f);
   keyRenderer.drawDots(tdots, 1.0f, 0.3f, 1.0f, 0.03f);
 }
+
+void Renderer::renderMouseMode(bool injectArmed, const std::string &poseHint)
+{
+  glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
+  glClear(GL_COLOR_BUFFER_BIT);
+
+  if (injectArmed)
+    textRenderer.drawCentered("MOUSE MODE", 0.0f, 0.25f, 0.06f, 0.3f, 1.0f, 0.45f);
+  else
+    textRenderer.drawCentered("MOUSE MODE (OFF)", 0.0f, 0.25f, 0.06f, 1.0f, 0.45f, 0.3f);
+
+  if (!poseHint.empty())
+    textRenderer.drawCenteredFit(poseHint, 0.0f, 0.0f, 0.12f, 0.9f, 0.55f, 1.0f, 1.0f);
+}

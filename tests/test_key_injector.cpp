@@ -45,13 +45,3 @@ TEST_CASE("ignores virtual-key 0 even when armed")
   CHECK_FALSE(inj.tap(0));
   CHECK(sent.empty());
 }
-
-TEST_CASE("toggle flips the armed state")
-{
-  KeyInjector inj([](uint32_t, bool) { return true; });
-  CHECK_FALSE(inj.armed());
-  inj.toggle();
-  CHECK(inj.armed());
-  inj.toggle();
-  CHECK_FALSE(inj.armed());
-}

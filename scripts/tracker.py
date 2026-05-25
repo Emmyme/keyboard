@@ -22,7 +22,23 @@ options = vision.HandLandmarkerOptions(
 )
 landmarker = vision.HandLandmarker.create_from_options(options)
 
-cap = cv2.VideoCapture(0, cv2.CAP_DSHOW)
+def open_camera():
+    # Try the default backend first, then explicit Windows backends. Some webcams
+    # and OpenCV builds fail on DSHOW/MSMF by index but work on the default.
+    for index, backend in [(0, cv2.CAP_ANY), (0, cv2.CAP_MSMF), (0, cv2.CAP_DSHOW), (1, cv2.CAP_ANY)]:
+        cap = cv2.VideoCapture(index, backend)
+        if cap.isOpened():
+            ok, _ = cap.read()
+            if ok:
+                print(f"tracker: camera opened (index {index}, backend {backend})", flush=True)
+                return cap
+        cap.release()
+    return None
+
+cap = open_camera()
+if cap is None:
+    print("tracker: ERROR no camera could be opened on any backend", flush=True)
+    raise SystemExit(1)
 print(f"tracker: streaming hand landmarks to udp://127.0.0.1:{PORT}", flush=True)
 
 start = time.time()

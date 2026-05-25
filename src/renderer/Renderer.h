@@ -4,6 +4,7 @@
 #include "renderer/TextRenderer.h"
 #include "keyboard/KeyboardLayout.h"
 #include "config/Config.h"
+#include <string>
 #include <utility>
 #include <vector>
 
@@ -21,6 +22,9 @@ public:
                    const std::vector<std::pair<float, float>> &fingertipsKb,
                    const std::vector<std::pair<float, float>> &targetsKb,
                    bool injectArmed);
+
+  // Mouse mode: hides the keyboard, shows a status badge and a live pose hint.
+  void renderMouseMode(bool injectArmed, const std::string &poseHint);
 
 private:
   std::pair<float, float> kbToNdc(float kx, float ky) const;

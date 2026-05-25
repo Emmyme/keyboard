@@ -7,6 +7,11 @@
 #include "config/Config.h"
 #include "input/LandmarkReceiver.h"
 #include "input/KeyInjector.h"
+#include "input/MouseInjector.h"
+#include "mouse/HandPose.h"
+#include "mouse/MouseController.h"
+#include "mouse/PoseStabilizer.h"
+#include "mouse/PalmToggle.h"
 #include "tracker_paths.h" // baked LK_PYTHON_EXE / LK_PROJECT_ROOT
 #include <windows.h>
 #include <chrono>
@@ -26,6 +31,19 @@ void activeFingertip(const std::vector<HandLandmarks> &hands, float &x, float &y
   x = hands[0].points[8].x;
   y = hands[0].points[8].y;
 }
+
+const char *poseHint(Pose p)
+{
+  switch (p)
+  {
+  case Pose::Point: return "POINT";
+  case Pose::PinchIndex: return "PINCH";
+  case Pose::OpenPalm: return "PALM";
+  default: return "-";
+  }
+}
+
+enum class AppMode { Keyboard, Mouse };
 }
 
 int main()
@@ -74,10 +92,17 @@ int main()
   Calibrator calibrator;
   TapDetector tapDetector;
   KeyInjector injector;
-  injector.setArmed(true); // armed on start: a committed dwell types immediately
+  MouseInjector mouseInjector;
+  MouseController mouseController;
+  PoseStabilizer poseStabilizer;
+  PalmToggle palmToggle;
+  AppMode mode = AppMode::Keyboard;
+  bool armed = true; // one switch gates both keyboard and mouse injection
+  injector.setArmed(armed);
+  mouseInjector.setArmed(armed);
   std::cout << "Calibrate: move your index fingertip to each magenta target and hold.\n"
             << "Typing is ON at start. Dwell CAPS for uppercase.\n"
-            << "Keys: F8 arm/disarm, F9 recalibrate, ESC quit." << std::endl;
+            << "Open palm ~0.8s toggles mouse mode. Keys: F8 arm/disarm, F9 recalibrate, ESC quit." << std::endl;
 
   // Locate the on-screen CAPS toggle (sentinel VK_CAPITAL) once.
   int capsKey = -1;
@@ -99,8 +124,10 @@ int main()
     bool f8 = (GetAsyncKeyState(VK_F8) & 0x8000) != 0;
     if (f8 && !prevF8)
     {
-      injector.toggle();
-      std::cout << "Injection " << (injector.armed() ? "ARMED" : "disarmed") << std::endl;
+      armed = !armed;
+      injector.setArmed(armed);
+      mouseInjector.setArmed(armed);
+      std::cout << "Injection " << (armed ? "ARMED" : "disarmed") << std::endl;
     }
     prevF8 = f8;
 
@@ -109,6 +136,36 @@ int main()
     last = now;
 
     auto hands = tracker.latest();
+
+    // Open-palm dwell flips modes, checked first regardless of current mode.
+    Pose pose = hands.empty() ? Pose::None : classifyPose(hands[0]);
+    Pose stablePose = poseStabilizer.update(pose, dt); // debounce per-frame jitter
+    float centerX = hands.empty() ? 0.0f : hands[0].points[9].x;
+    float centerY = hands.empty() ? 0.0f : hands[0].points[9].y;
+    if (palmToggle.update(pose == Pose::OpenPalm, dt))
+    {
+      mode = (mode == AppMode::Keyboard) ? AppMode::Mouse : AppMode::Keyboard;
+      mouseController.reset();
+      std::cout << "Mode: " << (mode == AppMode::Mouse ? "MOUSE" : "KEYBOARD") << std::endl;
+    }
+
+    if (mode == AppMode::Mouse)
+    {
+      for (const auto &it : mouseController.update(stablePose, centerX, centerY, dt))
+      {
+        switch (it.type)
+        {
+        case MouseIntentType::MoveBy:
+          mouseInjector.moveBy(static_cast<int>(it.dx), static_cast<int>(it.dy));
+          break;
+        case MouseIntentType::LeftDown: mouseInjector.leftDown(); break;
+        case MouseIntentType::LeftUp: mouseInjector.leftUp(); break;
+        }
+      }
+      renderer.renderMouseMode(armed, poseHint(stablePose));
+      overlay.swapBuffers();
+      continue; // skip the keyboard path entirely
+    }
 
     std::vector<int> hovered, pressed;
     std::vector<std::pair<float, float>> fingertipsKb, targetsKb;

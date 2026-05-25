@@ -20,7 +20,6 @@ public:
   bool update(float fingertipX, float fingertipY, double dtSeconds, Calibration &outCalib);
 
   State state() const { return state_; }
-  float dwellProgress() const { return static_cast<float>(dwellSeconds_ / kDwellNeeded); }
 
 private:
   static constexpr double kDwellNeeded = 1.0; // seconds to hold

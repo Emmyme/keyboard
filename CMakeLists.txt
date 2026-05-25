@@ -26,11 +26,19 @@ add_executable(unit_tests
   tests/test_calibration.cpp
   tests/test_tap_detector.cpp
   tests/test_key_injector.cpp
+  tests/test_mouse_injector.cpp
+  tests/test_hand_pose.cpp
+  tests/test_mouse_controller.cpp
+  tests/test_palm_toggle.cpp
+  tests/test_pose_stabilizer.cpp
+  src/mouse/HandPose.cpp
+  src/mouse/MouseController.cpp
   src/keyboard/KeyboardLayout.cpp
   src/keyboard/KeyDetector.cpp
   src/keyboard/TapDetector.cpp
   src/config/Config.cpp
   src/input/KeyInjector.cpp
+  src/input/MouseInjector.cpp
 )
 target_include_directories(unit_tests PRIVATE
   ${PROJECT_SOURCE_DIR}/src
@@ -55,6 +63,9 @@ add_executable(laser_keyboard
   src/config/Config.cpp
   src/input/LandmarkReceiver.cpp
   src/input/KeyInjector.cpp
+  src/input/MouseInjector.cpp
+  src/mouse/HandPose.cpp
+  src/mouse/MouseController.cpp
   third_party/glad/src/glad.c
 )
 target_include_directories(laser_keyboard PRIVATE
